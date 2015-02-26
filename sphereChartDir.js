@@ -180,12 +180,13 @@ app.directive('ballChart', function($parse, $window, $log) {
         // svg.selectAll("g.x.axis").call(xAxisGen);
         //selects all objects with the class solid, only one ball has that class in this case. 
         
-
         svg.selectAll(".solid")
           .attr({
             cx: 133 + ballDataToPlot,
             cy: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4,
           });
+
+          //it appears that when a line is included on the graph, performance goes down, might be another reason.
 
           if (dataSet.length < 10000) {
             svg.select(".forTrace path")

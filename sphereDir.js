@@ -587,11 +587,6 @@ app.directive('spring', function($parse, $log) {
 
       mouseDown = true;
 
-      spherePhys.v = 0;
-
-      sphere1Phys.v = 0;
-
-
       console.log(mouseDown)
 
       window.removeEventListener('mousedown', onDocumentMouseDown, false);
@@ -604,6 +599,11 @@ app.directive('spring', function($parse, $log) {
 
         var intersects = raycaster.intersectObject(plane);
         container.style.cursor = 'move';
+
+        //we set velocities to zero when object is moved, this prevents initial movement in the incorrect direction.
+        spherePhys.v = 0;
+        sphere1Phys.v = 0;
+
       }
     }
 
