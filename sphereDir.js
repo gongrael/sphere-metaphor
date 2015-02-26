@@ -489,7 +489,6 @@ app.directive('spring', function($parse, $log) {
 
       arrow1GroupNet.add(arrow1MeshNet);
       arrow1GroupNet.add(arrow1MeshNet1);
-
       //arrowGroupNet.rotation.x = convertDeg(-25);
 
       arrow1GroupNet.position.y = radiusSphere * 8;
@@ -554,6 +553,15 @@ app.directive('spring', function($parse, $log) {
         //Moves the parent object and all its children.
 
         SELECTED.position.x = intersects[0].point.x;
+
+        //need to update the radius while moving the ball around.... 
+        radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
+        
+        scope.$apply(function() {
+              exp.assign(scope.$parent, radius-150);
+            });
+
+
       }
 
       //by setting the second argument to try, you also select the children of whatever is in objects.
@@ -632,9 +640,7 @@ app.directive('spring', function($parse, $log) {
 
     function render() {
 
-      renderer.render(scene, camera);
-
-      if (!mouseDown) {
+       if (!mouseDown) {
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
         // Two forces, electrostatic_att electrostatic_rep. Have to balance the forces based on   
@@ -746,8 +752,17 @@ app.directive('spring', function($parse, $log) {
         arrow1GroupAtt.scale.set( Fatt / arrowScaling,  Fatt / arrowScaling, 1);
 
         arrow1GroupNet.scale.set(Fnet/arrowNetScaling, Fnet/arrowNetScaling, 1);
+
+        scope.$apply(function() {
+              exp.assign(scope.$parent, radius-150);
+            });
       }
+
+       renderer.render(scene, camera);
+
      }
+
+
      
       return {
         scene: scene,

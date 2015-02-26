@@ -32,12 +32,20 @@ app.directive('ballChart', function($parse, $window, $log) {
       //is a selection for that svg.
       var svg = d3.select(rawSvg[0]);
 
+
+      //variables for Morse Potential
+      var De = 20000;
+      var Beta = 2000;
+      var Req = 200;
+      // var R = ballDataToPlot;
+
       //for the trace
       var dataSet = [{
-        x: 133 + ballDataToPlot,
-        y: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4
+        x: ballDataToPlot,
+        y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
       }]
-      $log.log(dataSet);
+
+     
 
       // defines the function that will be used to make the path.      
       var lineFunc = d3.svg.line()
@@ -68,20 +76,16 @@ app.directive('ballChart', function($parse, $window, $log) {
       // the line and a resulting path is used to draw the new trace.
       // the if statements are in place to prevent noise in the graph by rapid movement of the balls
       // also, to stop the writing of new data points once the trace is completed. 
-      
-      
       function traceBall() {
         if (Math.abs(dataSet[dataSet.length-1].x - (133 + ballDataToPlot)) < 7) {
-          if (dataSet.length < 20000) {
+          if (dataSet.length < 10000) {
             dataSet.push({
               x: 133 + ballDataToPlot,
               y: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4
             });
-            $log.log(dataSet);
           }
         }
       }
-
 
 
       // This sets the scaling for the entire graph. Adjusting these values will properly align the axis
@@ -175,14 +179,18 @@ app.directive('ballChart', function($parse, $window, $log) {
         // svg.selectAll("g.y.axis").call(yAxisGen);
         // svg.selectAll("g.x.axis").call(xAxisGen);
         //selects all objects with the class solid, only one ball has that class in this case. 
+        
+
         svg.selectAll(".solid")
           .attr({
             cx: 133 + ballDataToPlot,
             cy: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4,
           });
 
-        svg.select(".forTrace path")
-          .attr("d", lineFunc(dataSet));
+          if (dataSet.length < 10000) {
+            svg.select(".forTrace path")
+            .attr("d", lineFunc(dataSet));
+        }
       }
 
       drawBallChart();
