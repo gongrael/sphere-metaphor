@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.12/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js"></script>
+    <!-- <script src="slider.js"></script> -->
+    <script src="ballChartDir.js"></script>
+    <script src="springDir.js"></script>
+    <!-- <script src="trackballControls.js"></script> -->
+
+    
+  </head>
+
+  <body>
+   
+    <div ng-app="ballApp" ng-controller="ballController">
+    
+    
+    <h3 class="centred head3"> Simple oscillator: Ball on a spring </h3>
+    
+     <ball-chart ball-data="ballX.value"></ball-chart>
+     
+     <spring ball-data-spring="ballX.value"></spring>
+
+     <!-- {{ballX.value}} -->
+     
+    <!-- <slider floor="20" ceiling="80" ng-model="ballX.value"></slider> -->
+      
+     </div>
+  </body>
+
+</html>
