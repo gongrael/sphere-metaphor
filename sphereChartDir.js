@@ -1,4 +1,4 @@
-app.directive('ballChart', function($parse, $window, $log) {
+app.directive('sphereChart', function($parse, $window, $log) {
   return {
     restrict: 'EA',
     //replace: true,
@@ -45,8 +45,8 @@ app.directive('ballChart', function($parse, $window, $log) {
         y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
       }]
 
+      var maxAndMin = maxOrMin(dataSet);
      
-
       // defines the function that will be used to make the path.      
       var lineFunc = d3.svg.line()
         .x(function(d) {
@@ -57,6 +57,23 @@ app.directive('ballChart', function($parse, $window, $log) {
         })
         .interpolate('basis');
 
+
+      // This function checks the value of the number, compares it to a global max and min, and resets the global variables minX and maxX.
+        function maxOrMin (dataArray) {
+        var maxX = dataArray[0].x;      
+        var minX = dataArray[0].x;
+
+        for (var i = 0; i < dataArray.length ; i++) {
+          if (dataArray[i].x >= maxX) {
+            maxX = Math.round(dataArray[i].x);
+          }
+          if (dataArray[i].x <= minX) {
+            minX = Math.round(dataArray[i].x);
+          }
+        }
+        var maxAndMin = {"max": maxX, "min": minX};
+        return maxAndMin; 
+      }   
 
       //$watchCollection for changes in a collection of variables (ie. matrices or objects), if there are any changes 
       //a newValue is obtained, we then set the newValue of ballDataToPlot. 

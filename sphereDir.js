@@ -1,4 +1,4 @@
-app.directive('spring', function($parse, $log) {
+app.directive('sphere', function($parse, $log) {
   return {
     restrict: "EA",
     template: '<div id="webgl-container" class="centred"></div>',
