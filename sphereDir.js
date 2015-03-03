@@ -573,6 +573,11 @@ app.directive('sphere', function($parse, $log) {
 
       mouseDown = true;
 
+<<<<<<< HEAD
+=======
+      console.log(mouseDown)
+
+>>>>>>> origin/master
       window.removeEventListener('mousedown', onDocumentMouseDown, false);
       window.addEventListener('mouseup', onDocumentMouseUp, false);
 
@@ -586,6 +591,11 @@ app.directive('sphere', function($parse, $log) {
 
         var intersects = raycaster.intersectObject(plane);
         container.style.cursor = 'move';
+
+        //we set velocities to zero when object is moved, this prevents initial movement in the incorrect direction.
+        spherePhys.v = 0;
+        sphere1Phys.v = 0;
+
       }
     }
 

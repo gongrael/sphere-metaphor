@@ -1,4 +1,4 @@
-app.directive('sphereChart', function($parse, $window, $log) {
+app.directive('ballChart', function($parse, $window, $log) {
   return {
     restrict: 'EA',
     //replace: true,
@@ -34,23 +34,14 @@ app.directive('sphereChart', function($parse, $window, $log) {
       //is a selection for that svg.
       var svg = d3.select(rawSvg[0]);
 
-
-      //variables for Morse Potential
-      var De = 20000;
-      var Beta = 2000;
-      var Req = 200;
-      // var R = ballDataToPlot;
-
       //for the trace
       var dataSet = [{
-        x: ballDataToPlot,
-        y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-        //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+        x: 133 + ballDataToPlot,
+        y: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4
       }]
 
-      //start evaluating the max and min values in the data set
       var maxAndMin = maxOrMin(dataSet);
-     
+
       // defines the function that will be used to make the path.      
       var lineFunc = d3.svg.line()
         .x(function(d) {
@@ -59,26 +50,30 @@ app.directive('sphereChart', function($parse, $window, $log) {
         .y(function(d) {
           return d.y;
         })
-        .interpolate('basis');
-
+        .interpolate('basis'); //basis to make it a curved line.
 
       // This function checks the value of the number, compares it to a global max and min, and resets the global variables minX and maxX.
-        function maxOrMin (dataArray) {
-        var maxX = dataArray[0].x;      
-        var minX = dataArray[0].x;
+      function maxOrMin (dataArray) {
+          var maxX = dataArray[0].x;      
 
-        for (var i = 0; i < dataArray.length ; i++) {
-          if (dataArray[i].x >= maxX) {
-            maxX = Math.round(dataArray[i].x);
+          for (var i = 0; i < dataArray.length ; i++) {
+            if (dataArray[i].x >= maxX) {
+              maxX = Math.round(dataArray[i].x);
+            }
           }
-          if (dataArray[i].x <= minX) {
-            minX = Math.round(dataArray[i].x);
-          }
-        }
-        var maxAndMin = {"max": maxX, "min": minX};
-        return maxAndMin; 
-      }   
 
+          var minX = dataArray[0].x;
+
+          for (var j = 0; j < dataArray.length ; j++) {
+            if (dataArray[j].x <= minX) {
+              minX = Math.round(dataArray[j].x);
+            }
+          }
+          
+          var maxAndMin = {"max": maxX, "min": minX};
+          return maxAndMin; 
+        }          
+      
       //$watchCollection for changes in a collection of variables (ie. matrices or objects), if there are any changes 
       //a newValue is obtained, we then set the newValue of ballDataToPlot. 
       // use exp, which is the parsed version of attrs.ballData.
@@ -87,37 +82,31 @@ app.directive('sphereChart', function($parse, $window, $log) {
       scope.$watch(exp, function(newVal, oldVal) {
         if (newVal != oldVal) {
           oldValue = oldVal;
-          ballDataToPlot = newVal;
-          traceBall()
-          redrawBallChart();
+
+          ballDataToPlot = newVal; console.log(oldValue - ballDataToPlot);
+          traceBall();
+          redrawBallChart(); 
           maxAndMin = maxOrMin(dataSet);
-        }
+         }
       })
 
       // trace ball is way of leaving a trace for the movement of the ball, highlighting the
-      // resulting graph. The trace now relies on a data set, which is updated whenever the ball moves.
-      // the line and a resulting path is used to draw the new trace.
-      // the if statements are in place to prevent noise in the graph by rapid movement of the balls
-      // also, to stop the writing of new data points once the trace is completed. 
+      // resulting graph. New data is only added to the data set when the ball moves out the max and min range.
+      // A sorting operation is needed to make sure the graph is connected properly. 
+      
        function traceBall() {
-          if (Math.round(ballDataToPlot) < maxAndMin.min) {
+          if (ballDataToPlot+133 < maxAndMin.min) {
             newPoint = true;
             dataSet.push({
-                x: ballDataToPlot,
-                y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-
-               //x: ballDataToPlot,
-               //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+              x: 133 + ballDataToPlot,
+              y: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4
             });
           }
-          else if (Math.round(ballDataToPlot) > maxAndMin.max) {
+          else if (Math.round(ballDataToPlot+133) > maxAndMin.max) {
             newPoint = true;
             dataSet.push({
-              x: ballDataToPlot,
-              y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-
-              //x: ballDataToPlot,
-              //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+              x: 133 + ballDataToPlot,
+              y: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4
             });
           }
           // use the array sort method in conjunction with a simple function, that points the sorter to the object property.
@@ -187,6 +176,7 @@ app.directive('sphereChart', function($parse, $window, $log) {
           .style("text-anchor", "middle")
           .text("Displacement from Equilibrium (cm)");
 
+
         svg.append("text")
           .attr("transform", "rotate(-90)")
           .attr("y", 0)
@@ -200,12 +190,13 @@ app.directive('sphereChart', function($parse, $window, $log) {
         // use class to give it an identifier that allows it to be manipulated easily. 
         svg.append("circle")
           .attr({
-            cx: ballDataToPlot,
-            cy: 360 - (ballDataToPlot) * (ballDataToPlot) / 4,
+            cx: 133 + ballDataToPlot,
+            cy: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4,
             r: 7,
             "fill": "#4bc4c4",
             "class": "solid",
           });
+
 
         d3.select(".forTrace")
           .append("svg:path")
@@ -222,35 +213,20 @@ app.directive('sphereChart', function($parse, $window, $log) {
         //setChartParameters();
         // svg.selectAll("g.y.axis").call(yAxisGen);
         // svg.selectAll("g.x.axis").call(xAxisGen);
-<<<<<<< HEAD
-
-        //selects all objects with the class solid, only one ball has that class in this case. 
-           svg.selectAll(".solid")
-=======
-        //selects all objects with the class solid, only one ball has that class in this case. 
         
+        //selects all objects with the class solid, only one ball has that class in this case. 
         svg.selectAll(".solid")
->>>>>>> origin/master
           .attr({
-            cx: ballDataToPlot,
-            cy: 360 - (ballDataToPlot) * (ballDataToPlot) / 4,
+            cx: 133 + ballDataToPlot,
+            cy: 360 - (50 - ballDataToPlot) * (50 - ballDataToPlot) / 4,
           });
 
-<<<<<<< HEAD
         if (newPoint) {
         svg.select(".forTrace path")
-          .attr("d", lineFunc(dataSet))
-         newPoint = false;
-=======
-          //it appears that when a line is included on the graph, performance goes down, might be another reason.
-
-          if (dataSet.length < 10000) {
-            svg.select(".forTrace path")
-            .attr("d", lineFunc(dataSet));
->>>>>>> origin/master
+          .attr("d", lineFunc(dataSet));
+        newPoint = false;
         }
       }
-      
 
       drawBallChart();
 
