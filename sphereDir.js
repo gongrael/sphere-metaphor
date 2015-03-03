@@ -544,7 +544,7 @@ app.directive('sphere', function($parse, $log) {
         radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
 
          scope.$apply(function() {
-         exp.assign(scope.$parent, SELECTED.position.x);
+         exp.assign(scope.$parent, sphere1Group.x);
          });
 
         
@@ -572,12 +572,9 @@ app.directive('sphere', function($parse, $log) {
       var intersects = raycaster.intersectObjects(objects, true); //by setting the second argument to try, you also select the children and parent of whatever is in objects.
 
       mouseDown = true;
-
-<<<<<<< HEAD
-=======
       console.log(mouseDown)
 
->>>>>>> origin/master
+
       window.removeEventListener('mousedown', onDocumentMouseDown, false);
       window.addEventListener('mouseup', onDocumentMouseUp, false);
 
@@ -736,9 +733,8 @@ app.directive('sphere', function($parse, $log) {
 
 
       scope.$apply(function() {
-         exp.assign(scope.$parent, radius);
+         exp.assign(scope.$parent, sphere1Group.position.x);
       });
-
            
       }
        renderer.render(scene, camera);

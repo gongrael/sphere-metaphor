@@ -222,32 +222,22 @@ app.directive('sphereChart', function($parse, $window, $log) {
         //setChartParameters();
         // svg.selectAll("g.y.axis").call(yAxisGen);
         // svg.selectAll("g.x.axis").call(xAxisGen);
-<<<<<<< HEAD
 
-        //selects all objects with the class solid, only one ball has that class in this case. 
-           svg.selectAll(".solid")
-=======
-        //selects all objects with the class solid, only one ball has that class in this case. 
+       //selects all objects with the class solid, only one ball has that class in this case. 
         
         svg.selectAll(".solid")
->>>>>>> origin/master
           .attr({
             cx: ballDataToPlot,
             cy: 360 - (ballDataToPlot) * (ballDataToPlot) / 4,
           });
 
-<<<<<<< HEAD
+          //it appears that when a line is included on the graph, performance goes down, might be another reason.
+
         if (newPoint) {
         svg.select(".forTrace path")
           .attr("d", lineFunc(dataSet))
          newPoint = false;
-=======
-          //it appears that when a line is included on the graph, performance goes down, might be another reason.
 
-          if (dataSet.length < 10000) {
-            svg.select(".forTrace path")
-            .attr("d", lineFunc(dataSet));
->>>>>>> origin/master
         }
       }
       
