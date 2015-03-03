@@ -22,10 +22,6 @@ app.directive('sphere', function($parse, $log) {
       // any properties.
       var ballData = exp(scope.$parent);
 
-      // scope.$apply(function() {
-      //    exp.assign(scope.$parent, sphere1Group.position.x);
-      // });
-
       //need to define the variable container so that we can match it with the draggable example. 
       var container = document.getElementById("webgl-container");
       //Add the property isDown to mouse, in order to pause the animation
@@ -544,7 +540,7 @@ app.directive('sphere', function($parse, $log) {
         radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
 
          scope.$apply(function() {
-         exp.assign(scope.$parent, sphere1Group.x);
+          exp.assign(scope.$parent, sphere1Group.position.x);
          });
 
         
@@ -615,7 +611,6 @@ app.directive('sphere', function($parse, $log) {
       requestAnimationFrame(animate);
       render();
     }
-
 
     function render() {
 
