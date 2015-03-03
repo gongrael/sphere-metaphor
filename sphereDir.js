@@ -22,19 +22,23 @@ app.directive('sphere', function($parse, $log) {
       // any properties.
       var ballData = exp(scope.$parent);
 
+      // scope.$apply(function() {
+      //    exp.assign(scope.$parent, sphere1Group.position.x);
+      // });
+
       //need to define the variable container so that we can match it with the draggable example. 
       var container = document.getElementById("webgl-container");
       //Add the property isDown to mouse, in order to pause the animation
-    mouseDown = false;
+      mouseDown = false;
 
-     // Variables to make the mouse tracking work.
-    var objects = [],
+      // Variables to make the mouse tracking work.
+      var objects = [],
       plane;
-    var raycaster = new THREE.Raycaster();
-    var mouse = new THREE.Vector2(),
+      var raycaster = new THREE.Raycaster();
+      var mouse = new THREE.Vector2(),
 
       INTERSECTED, SELECTED;
-    var currentMouse;
+      var currentMouse;
 
  
      //define variables for the scene. Define previous so that you can remove the object. Define material so you can load
@@ -509,24 +513,6 @@ app.directive('sphere', function($parse, $log) {
       return degToRad;
     }
 
-     // this is for uploading the correct materials for the imported 3D asset
-     // in this case, we loaded a JSON object from blender, the spring. 
-    function addModelToScene(object) {
-
-
-      // for preparing animation, need to tell the materials to have the potential to morph between keyframes
-      for (var i = 0; i < materials.length; i++) {
-        materials[i].morphTargets = true;
-      }
-
-      // materials are definied in the JSON file for the 3D model. 
-      var material = new THREE.MeshFaceMaterial(materials);
-      spring = new THREE.Mesh(geometry, material);
-      spring.scale.set(11, 11, 11);
-      spring.rotation.z = (convert(-90))
-      spring.position.x = -70;
-      scene.add(spring);
-    }
 
      //quick function for converting degrees into radians.
     function convert(degree) {
@@ -556,12 +542,12 @@ app.directive('sphere', function($parse, $log) {
 
         //need to update the radius while moving the ball around.... 
         radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
+
+         scope.$apply(function() {
+         exp.assign(scope.$parent, SELECTED.position.x);
+         });
+
         
-        scope.$apply(function() {
-              exp.assign(scope.$parent, radius-150);
-            });
-
-
       }
 
       //by setting the second argument to try, you also select the children of whatever is in objects.
@@ -587,17 +573,13 @@ app.directive('sphere', function($parse, $log) {
 
       mouseDown = true;
 
-      spherePhys.v = 0;
-
-      sphere1Phys.v = 0;
-
-
-      console.log(mouseDown)
-
       window.removeEventListener('mousedown', onDocumentMouseDown, false);
       window.addEventListener('mouseup', onDocumentMouseUp, false);
 
       if (intersects.length > 0) {
+
+        spherePhys.v = 0;
+        sphere1Phys.v = 0;
 
         //Define the selected as the parent.
         SELECTED = intersects[0].object.userData.parent;
@@ -627,20 +609,10 @@ app.directive('sphere', function($parse, $log) {
       render();
     }
 
-     //function calcAttr(innerCharge1, outerCharge2, radius) {
-     //  var force = sphereK * innerCharge1 * outerCharge2 / Math.pow((radius / 10), 3);
-     //  return force;
-     //}
-
-     //function calcRep(innerCharge1, innerCharge1, radius) {
-     //  var force = -sphere1K * sphereCharge * sphere1Charge / Math.pow((radius / 10), 5)
-     //  return force;
-     //}
-
 
     function render() {
 
-       if (!mouseDown) {
+         if (!mouseDown) {
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
         // Two forces, electrostatic_att electrostatic_rep. Have to balance the forces based on   
@@ -676,7 +648,6 @@ app.directive('sphere', function($parse, $log) {
         else if (radius >= thirdBreak && radius < fourthBreak) {
           //Frep = Frep4Obj.C/(radius - Frep4Obj.xo);  //if you want to define as an inverse relationship (leads to jumpiness)
           //Fatt = Fatt4Obj.C/(radius - Fatt4Obj.xo);
-          
           Frep = -(Frep4Obj.m * radius + Frep4Obj.b);
           Fatt = Fatt4Obj.m * radius + Fatt4Obj.b;
         } 
@@ -753,17 +724,16 @@ app.directive('sphere', function($parse, $log) {
 
         arrow1GroupNet.scale.set(Fnet/arrowNetScaling, Fnet/arrowNetScaling, 1);
 
-        scope.$apply(function() {
-              exp.assign(scope.$parent, radius-150);
-            });
+
+      scope.$apply(function() {
+         exp.assign(scope.$parent, radius);
+      });
+
+           
       }
-
        renderer.render(scene, camera);
-
      }
-
-
-     
+    
       return {
         scene: scene,
       }

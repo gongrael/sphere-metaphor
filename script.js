@@ -4,6 +4,6 @@ var app = angular.module('ballApp', []);
 
 app.controller('ballController', ['$scope',
   function($scope) {
-    $scope.ballX = {value:50};
+    $scope.ballX = {value:0};
   }
 ]);
