@@ -1,4 +1,4 @@
-app.directive('sphere', function($parse, $log) {
+app.directive('sphere', function($parse, $log, $timeout) {
   return {
     restrict: "EA",
     template: '<div id="webgl-container" class="centred"></div>',
@@ -36,76 +36,87 @@ app.directive('sphere', function($parse, $log) {
       INTERSECTED, SELECTED;
       var currentMouse;
 
+      var width = 900;
+      var height = 300;
+
  
      //define variables for the scene. Define previous so that you can remove the object. Define material so you can load
      // it onto the sphere. 
-    var scene = new THREE.Scene(),
-      light = new THREE.PointLight(0xffffff),
-      camera,
-      renderer = new THREE.WebGLRenderer({
-        alpha: true //need alpha to be true to change colour of background
-      }),
-      sphere,
-      stats,
-      previous,
-      material;
+      var scene = new THREE.Scene(),
+        light = new THREE.PointLight(0xffffff),
+        camera,
+        renderer = new THREE.WebGLRenderer({
+          alpha: true //need alpha to be true to change colour of background
+        }),
+        sphere,
+        stats,
+        previous,
+        material;
 
-    var radiusSphere = 7;
+        var radiusSphere = 7;
     
-    var arrowGroupRep, arrowGroupAtt, arrowGroupNet;
+        var arrowGroupRep, arrowGroupAtt, arrowGroupNet;
 
-    //variables for electrostatic physics
+        //variables for electrostatic physics
 
-    //var sphereInnerCharge = 1;
-    //var sphere1InnerCharge = 1;
-    //var sphereCharge = 1;
-    //var sphere1Charge = 1;
+        //var sphereInnerCharge = 1;
+        //var sphere1InnerCharge = 1;
+        //var sphereCharge = 1;
+        //var sphere1Charge = 1;
 
-    var sphereMass = 1;
-    var sphere1Mass = 1;
+        var spherePhys = {
+          "v": 0
+          };
+          var sphere1Phys = {
+          "v": 0
+          };
 
-    //var sphereRepK = 200;
-    //var sphereAttK = 400;
 
-     // Boundary Break Points
-     // Important for relating animation to the world
+        var sphereMass = 1;
+        var sphere1Mass = 1;
 
-    var firstBreak = 30;
-    var secondBreak = 200;
-    var thirdBreak = 350;
-    var fourthBreak = 500;
+        //var sphereRepK = 200;
+        //var sphereAttK = 400;
 
-     // Imporant force values
+         // Boundary Break Points
+         // Important for relating animation to the world
 
-     // Value of force at first break, Repulsive greater. Will use linear graphs for this (for now) //can use this to allow students to manipulate variables?
-    var ForceRepAtFirst = 40;
-    var ForceAttAtFirst = 35;
+        var firstBreak = 30;
+        var secondBreak = 200;
+        var thirdBreak = 350;
+        var fourthBreak = 500;
 
-     // Value of force at second break (equilibrium point), same for both. Attractive greater. Will use linear relationships. 
-    var ForceRepAtSecond = 25;
-    var ForceAttAtSecond = 25;
+         // Imporant force values
 
-     // Value of the forces at the third break the attractive force is always greater, but both forces diminish to zero quickly. Will use inverse relationships (1/x)
-    var ForceRepAtThird = 10;
-    var ForceAttAtThird = 15;
-    
-    // always a small attractive force present.
-    var ForceRepAtFourth = 0;
-    var ForceAttAtFourth = 0.001;
+         // Value of force at first break, Repulsive greater. Will use linear graphs for this (for now) //can use this to allow students to manipulate variables?
+        var ForceRepAtFirst = 52;
+        var ForceAttAtFirst = 35;
 
-     
-     //Define the slope and the intercept for the different portions of the piece wise function. 
-     //piecewise function contains only linear equations.
-    Frep2Obj = linearEquation(firstBreak, ForceRepAtFirst, secondBreak, ForceRepAtSecond);
-    Fatt2Obj = linearEquation(firstBreak, ForceAttAtFirst, secondBreak, ForceAttAtSecond);
-       
-      
-    Frep3Obj = linearEquation(secondBreak, ForceRepAtSecond, thirdBreak, ForceRepAtThird);
-    Fatt3Obj = linearEquation(secondBreak, ForceAttAtSecond, thirdBreak, ForceAttAtThird);
-    
-    Frep4Obj = linearEquation(thirdBreak, ForceRepAtThird, fourthBreak, ForceRepAtFourth);
-    Fatt4Obj = linearEquation(thirdBreak, ForceAttAtThird, fourthBreak, ForceRepAtFourth);
-    
+         // Value of force at second break (equilibrium point), same for both. Attractive greater. Will use linear relationships. 
+        var ForceRepAtSecond = 25;
+        var ForceAttAtSecond = 25;
+
+         // Value of the forces at the third break the attractive force is always greater, but both forces diminish to zero quickly. Will use inverse relationships (1/x)
+        var ForceRepAtThird = 10;
+        var ForceAttAtThird = 15;
+        
+        // always a small attractive force present.
+        var ForceRepAtFourth = 0;
+        var ForceAttAtFourth = 0.001;
+
+         
+         //Define the slope and the intercept for the different portions of the piece wise function. 
+         //piecewise function contains only linear equations.
+        Frep2Obj = linearEquation(firstBreak, ForceRepAtFirst, secondBreak, ForceRepAtSecond);
+        Fatt2Obj = linearEquation(firstBreak, ForceAttAtFirst, secondBreak, ForceAttAtSecond);
+           
+          
+        Frep3Obj = linearEquation(secondBreak, ForceRepAtSecond, thirdBreak, ForceRepAtThird);
+        Fatt3Obj = linearEquation(secondBreak, ForceAttAtSecond, thirdBreak, ForceAttAtThird);
+        
+        Frep4Obj = linearEquation(thirdBreak, ForceRepAtThird, fourthBreak, ForceRepAtFourth);
+        Fatt4Obj = linearEquation(thirdBreak, ForceAttAtThird, fourthBreak, ForceRepAtFourth);
+        
     
     
     function linearEquation(x1, y1, x2, y2) { //might switch arguments to object properties
@@ -132,33 +143,15 @@ app.directive('sphere', function($parse, $log) {
 
       return forceObj;
     }
-    
-    var frameRate = 1 / 200;
-    var frameDelay = frameRate * 1000;
-
-    var Frep = 0;
-    var Fatt = 0;
-
-    var spherePhys = {
-      "v": 0
-    };
-    var sphere1Phys = {
-      "v": 0
-    };
-
 
     initScene();
 
-
-     // call the animate function. This was copied from the fuckingdevelopers demo on angular and Three.JS
+    // call the animate function. This was copied from the fuckingdevelopers demo on angular and Three.JS
     animate();
 
      // this function sets up the original container and the light sources etc. 
 
     function initScene() {
-
-      var width = 900;
-      var height = 300;
 
       // setup renderer
       renderer.setSize(width, height);
@@ -501,6 +494,7 @@ app.directive('sphere', function($parse, $log) {
       renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
       renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
       renderer.domElement.addEventListener('mouseup', onDocumentMouseUp, false);
+
     }
 
 
@@ -536,14 +530,10 @@ app.directive('sphere', function($parse, $log) {
 
         SELECTED.position.x = intersects[0].point.x;
 
+        console.log(sphereGroup.position.x); console.log(sphere1Group.position.x);
+
         //need to update the radius while moving the ball around.... 
-        radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
-
-         scope.$apply(function() {
-          exp.assign(scope.$parent, sphere1Group.position.x);
-         });
-
-        
+        //radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);     
       }
 
       //by setting the second argument to try, you also select the children of whatever is in objects.
@@ -568,17 +558,11 @@ app.directive('sphere', function($parse, $log) {
       var intersects = raycaster.intersectObjects(objects, true); //by setting the second argument to try, you also select the children and parent of whatever is in objects.
 
       mouseDown = true;
-      console.log(mouseDown)
-
-
+    
       window.removeEventListener('mousedown', onDocumentMouseDown, false);
       window.addEventListener('mouseup', onDocumentMouseUp, false);
 
       if (intersects.length > 0) {
-
-        spherePhys.v = 0;
-        sphere1Phys.v = 0;
-
         //Define the selected as the parent.
         SELECTED = intersects[0].object.userData.parent;
 
@@ -588,6 +572,9 @@ app.directive('sphere', function($parse, $log) {
         //we set velocities to zero when object is moved, this prevents initial movement in the incorrect direction.
         spherePhys.v = 0;
         sphere1Phys.v = 0;
+        Fnet = 0;
+        Frep = 0;
+        Fatt = 0;
 
       }
     }
@@ -613,8 +600,17 @@ app.directive('sphere', function($parse, $log) {
     }
 
     function render() {
+       //Wrap it in timeout so that is only runs when the current $watch cycles is over. 
+       //assigns the variable to scope.
+       $timeout(function() {
+        scope.$apply(function() {
+          exp.assign(scope.$parent, sphere1Group.position.x);
+          });
+        });
 
-         if (!mouseDown) {
+        if (!mouseDown) {
+
+        //if (true) {
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
         // Two forces, electrostatic_att electrostatic_rep. Have to balance the forces based on   
@@ -630,107 +626,119 @@ app.directive('sphere', function($parse, $log) {
         // Variables
         var radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
 
-        var dampenCon = -0.1;
+        var dampenCon = -0.08;
 
         //Will use a piece-wise function to graph out the changes. A lot easier than trying to come up with a single golden equation without 
         //graphing 
 
         if (radius < firstBreak) {
-          Frep = -ForceRepAtFirst;
+          Frep = ForceRepAtFirst;
           Fatt = ForceAttAtFirst;
         } 
         else if (radius >= firstBreak && radius < secondBreak) {
-          Frep = -(Frep2Obj.m * radius + Frep2Obj.b);
+          Frep = Frep2Obj.m * radius + Frep2Obj.b;
           Fatt = Fatt2Obj.m * radius + Fatt2Obj.b;
         } 
         else if (radius >= secondBreak && radius < thirdBreak) {
-          Frep = -(Frep3Obj.m * radius + Frep3Obj.b);
+          Frep = Frep3Obj.m * radius + Frep3Obj.b;
           Fatt = Fatt3Obj.m * radius + Fatt3Obj.b;
         } 
         else if (radius >= thirdBreak && radius < fourthBreak) {
           //Frep = Frep4Obj.C/(radius - Frep4Obj.xo);  //if you want to define as an inverse relationship (leads to jumpiness)
           //Fatt = Fatt4Obj.C/(radius - Fatt4Obj.xo);
-          Frep = -(Frep4Obj.m * radius + Frep4Obj.b);
+          Frep = Frep4Obj.m * radius + Frep4Obj.b;
           Fatt = Fatt4Obj.m * radius + Fatt4Obj.b;
         } 
         else if (radius >= fourthBreak) {
-          Frep = -ForceRepAtFourth;
+          Frep = ForceRepAtFourth;
           Fatt = ForceAttAtFourth;
         }
 
-        //dampening force
+  
+        //sphereGroup phyiscs below
 
-        if (spherePhys.v < 3) {
+        //if the sphere is to the left, attractive force points to the right.
+        if (sphereGroup.position.x < sphere1Group.position.x) {
+          var Fsum = Fatt - Frep;
+        }
+        else {
+          var Fsum = Frep - Fatt;
+        }          
+
+        //dampening force, Fdampen is negative cause of dampenCon
+        if (Math.abs(spherePhys.v) < 3) {
           var Fdampen = 0;
         } else {
           var Fdampen = dampenCon * spherePhys.v;
         }
-
-        var Fsum = Fatt + Frep;
+        
         var Fnet = Fsum + Fdampen;
 
         var a = Fnet / sphereMass;
 
-        //based on the position of the sphere, the net force will be switched if the ball is on the right side
-
-        if (sphereGroup.position.x > sphere1Group.position.x) {
-          a = -a;
-        }
-
-        //this is the change in velocity at a certain time measure
         spherePhys.v += a * frameRate;
 
-        //this  is the change in position with respect to that time measure.
-        sphereGroup.position.x += spherePhys.v * frameRate;
-
-        // sphere1 properties
-
-        if (sphere1Group.position.x > sphereGroup.position.x) {
-          a = -a;
+        if (sphereGroup.position.x <= -width/2 || sphereGroup.position.x >= width/2) {
+          spherePhys.v = -spherePhys.v;
         }
 
-        //this is the change in velocity at a certain time measure
-        sphere1Phys.v += a * frameRate;
+        sphereGroup.position.x += spherePhys.v * frameRate;
 
-        //this  is the change in position with respect to that time measure.
+        //sphere1Group physics below. Shares Fatt and Frep. 
+
+        if (sphere1Group.position.x < sphereGroup.position.x) {
+          var Fsum1 = Fatt - Frep;
+        }
+        else {
+          var Fsum1 = Frep - Fatt;
+        } 
+
+        //dampening force, Fdampen is negative cause of dampenCon
+        if (Math.abs(sphere1Phys.v) < 3) {
+          var Fdampen1 = 0;
+        } else {
+          var Fdampen1 = dampenCon * sphere1Phys.v;
+        }
+
+        var Fnet1 = Fsum1 + Fdampen1;
+
+        var a1 = Fnet1 / sphere1Mass;
+
+        sphere1Phys.v += a1 * frameRate;
+
+        if (sphere1Group.position.x <= -width/2 || sphere1Group.position.x >= width/2) {
+          sphere1Phys.v = -sphere1Phys.v;
+        }
+
         sphere1Group.position.x += sphere1Phys.v * frameRate;
-        
+
+         
         //variables
         
         //Arrows for the "SphereGroup"
-        
+             
+        var arrowScaling = 30;
+        var arrowNetScaling = 5;
+
+
         if (sphereGroup.position.x > sphere1Group.position.x) {
           Frep = -Frep;
           Fatt = -Fatt;
-          Fnet = -Fnet;
         }
-        
-        var arrowScaling = 30;
-        var arrowNetScaling = 5;
-        
-        arrowGroupRep.scale.set( Frep / arrowScaling,  Frep / arrowScaling, 1);
+        arrowGroupRep.scale.set( -Frep / arrowScaling,  Frep / arrowScaling, 1);
         arrowGroupAtt.scale.set( Fatt / arrowScaling,  Fatt / arrowScaling, 1);
 
         arrowGroupNet.scale.set(Fnet/arrowNetScaling, Fnet/arrowNetScaling, 1)
         
-        //Arrows for the "SphereGroup1"
-        
-        if (sphere1Group.position.x > sphereGroup.position.x) {
-          Frep = -Frep;
-          Fatt = -Fatt;
-          Fnet = -Fnet;
-        }
-        
+        //Arrows for the "SphereGroup1" Because this is switched, one set of arrows is darker then the other
+        // maybe try and fix this later
+
         arrow1GroupRep.scale.set( Frep / arrowScaling,  Frep / arrowScaling, 1);
-        arrow1GroupAtt.scale.set( Fatt / arrowScaling,  Fatt / arrowScaling, 1);
+        arrow1GroupAtt.scale.set( -Fatt / arrowScaling,  Fatt / arrowScaling, 1);
 
-        arrow1GroupNet.scale.set(Fnet/arrowNetScaling, Fnet/arrowNetScaling, 1);
+        arrow1GroupNet.scale.set(Fnet1/arrowNetScaling, Fnet/arrowNetScaling, 1);
 
 
-      scope.$apply(function() {
-         exp.assign(scope.$parent, sphere1Group.position.x);
-      });
-           
       }
        renderer.render(scene, camera);
      }
