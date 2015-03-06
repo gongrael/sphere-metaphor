@@ -205,10 +205,12 @@ app.directive('sphereChart', function($parse, $window, $log) {
             r: 7,
             "fill": "#4bc4c4",
             "class": "solid",
+            "transform": "translate(183)"
           });
 
         d3.select(".forTrace")
           .append("svg:path")
+          .attr("transform", "translate(183)")
           .attr("d", lineFunc(dataSet))
           .attr("stroke", "grey")
           .attr("stroke-width", 1)

@@ -25,7 +25,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //need to define the variable container so that we can match it with the draggable example. 
       var container = document.getElementById("webgl-container");
       //Add the property isDown to mouse, in order to pause the animation
-      mouseDown = false;
+      var mouseDown = false;
+      var clicked = false;
 
       // Variables to make the mouse tracking work.
       var objects = [],
@@ -312,6 +313,9 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var sphereRedFront1 = new THREE.Mesh(sphereGeomRed, redMaterialFront);
       var sphereRedBack1 = new THREE.Mesh(sphereGeomRed, redMaterialBack);
 
+
+      sphere1Group.position.x = 0;
+
       //need to add a parent value to all the components so it moves all as one.
       sphereBlueFront1.userData.parent = sphere1Group;
       sphereBlueBack1.userData.parent = sphere1Group;
@@ -489,6 +493,48 @@ app.directive('sphere', function($parse, $log, $timeout) {
       scene.add(arrow1GroupNet);
 
       sphere1Group.add(arrow1GroupNet);
+
+
+      //Add box around sphere1Group
+      
+
+      var cubeGeometry = new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 );
+      // using THREE.MeshFaceMaterial() in the constructor below
+       //   causes the mesh to use the materials stored in the geometry
+       var cubeMaterials = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true, transparent: true } ); 
+       cube = new THREE.Mesh( cubeGeometry, cubeMaterials );
+       cube.position.set(0, 0, 0);
+       cube.rotation.x = convertDeg(-5);
+       cube.rotation.y = convertDeg(5);
+       //scene.add( cube );
+      
+
+
+      //ADD TEXT
+      
+      // create a canvas element
+      var canvas1 = document.createElement('canvas');
+      var context1 = canvas1.getContext('2d');
+      context1.font = "Regular 14px Tahoma";
+      context1.fillStyle = "rgba(0,0,0,0.95)";
+      context1.fillText('Please click on a ball begin!', 0, 10);
+    
+      // canvas contents will be used for a texture
+      var texture1 = new THREE.Texture(canvas1) 
+      texture1.needsUpdate = true;
+            
+      var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+      material1.transparent = true;
+
+      var mesh1 = new THREE.Mesh(
+          new THREE.PlaneGeometry(canvas1.width, canvas1.height),
+          material1
+        );
+
+        mesh1.name = "text";
+        mesh1.position.set(0,-150,0);
+        scene.add( mesh1 );
+      
                 
       //These are listening for clicks of the mouse on the screen.
       renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
@@ -525,6 +571,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
       //if an object is selected, do what is inside this if statement
       if (SELECTED) {
+
         var intersects = raycaster.intersectObject(plane);
         //Moves the parent object and all its children.
 
@@ -569,6 +616,12 @@ app.directive('sphere', function($parse, $log, $timeout) {
         var intersects = raycaster.intersectObject(plane);
         container.style.cursor = 'move';
 
+        if (!clicked) {
+          var selectText = scene.getObjectByName("text");
+          scene.remove( selectText );
+          clicked = true;
+        }
+
         //we set velocities to zero when object is moved, this prevents initial movement in the incorrect direction.
         spherePhys.v = 0;
         sphere1Phys.v = 0;
@@ -608,7 +661,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
           });
         });
 
-        if (!mouseDown) {
+        if (!mouseDown && clicked) {
 
         //if (true) {
 
@@ -621,7 +674,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         //also for now, the forces experienced by both balls are equivalent, and mass/charge quantities cannot be changes.
         //it can be expanded at a later date.
 
-        frameRate = 1 / 5;
+        frameRate = 1 / 8;
 
         // Variables
         var radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
