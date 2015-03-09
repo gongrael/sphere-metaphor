@@ -724,6 +724,9 @@ app.directive('sphere', function($parse, $log, $timeout) {
         if (!mouseDown && clicked) {
 <<<<<<< HEAD
         //if (clicked) {
+=======
+
+>>>>>>> origin/master
         //if (true) {
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
