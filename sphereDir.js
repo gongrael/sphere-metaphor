@@ -722,6 +722,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         });
 
         if (!mouseDown && clicked) {
+<<<<<<< HEAD
         //if (clicked) {
         //if (true) {
 
