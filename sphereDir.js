@@ -6,7 +6,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
     // MUST use this scope, which is an isolated child scope, but still possess two-way binding? Still unclear how this works exactly. Will
     //continue to learn about it. But for now, this will allow you to 
     scope: {
-      ballDataSpring: '='
+      sphereData: '='
     },
 
     link: function(scope, elem, attrs) {
@@ -14,13 +14,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //parses all the data found in the attribute ball-data-spring, in this case it will grab the data represeted by
       //ballX in the controller
       //Parse creates a function of sorts, which can be fed a specific scope? Not 100% sure, need to read more.
-      var exp = $parse(attrs.ballDataSpring);
-
-      //saving the data to a variable, it returns the data, probably done so that you don't have to feed 
-      //scope back into the data. not super important
-      // To get to the parent scope (ie. whats in the controller), you have to feed in scope.$parent, otherwise it tries to use the children scope, which doesn't have
-      // any properties.
-      var ballData = exp(scope.$parent);
+      var exp = $parse(attrs.sphereData);
 
       //need to define the variable container so that we can match it with the draggable example. 
       var container = document.getElementById("webgl-container");
@@ -32,13 +26,14 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var objects = [],
       plane;
       var raycaster = new THREE.Raycaster();
-      var mouse = new THREE.Vector2(),
+      var mouse = new THREE.Vector3(),
 
-      INTERSECTED, SELECTED ,selectedSpherePos;
+      INTERSECTED, SELECTED, selectedStartPos;
       var currentMouse;
 
       var width = 900;
       var height = 300;
+      var startRadius = 300;
 
  
      //define variables for the scene. Define previous so that you can remove the object. Define material so you can load
@@ -87,6 +82,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
         var thirdBreak = 350;
         var fourthBreak = 500;
 
+        var equilibriumRadius = secondBreak;
+
          // Imporant force values
 
          // Value of force at first break, Repulsive greater. Will use linear graphs for this (for now) //can use this to allow students to manipulate variables?
@@ -102,7 +99,9 @@ app.directive('sphere', function($parse, $log, $timeout) {
         var ForceAttAtThird = 15;
         
         // always a small attractive force present.
-        var ForceRepAtFourth = 0;
+        // Cant set the forceRep to 0, this will mess up the scaling, and through an error:
+        //  matrix3.getInverse():cant invert matrix  - ie. because it was scaling to 0.
+        var ForceRepAtFourth = 0.00000000001;
         var ForceAttAtFourth = 0.001;
 
          
@@ -190,14 +189,14 @@ app.directive('sphere', function($parse, $log, $timeout) {
         height / 2,
         height / -2,
         1,
-        1000
+        2000
       );
       camera.position.z = 300;
       scene.add(camera);
 
       ///add a plane to the scene to make sure mouse controls work. Will need to look into how this works exactly. 
       plane = new THREE.Mesh(
-        new THREE.PlaneBufferGeometry(2000, 2000),
+        new THREE.PlaneBufferGeometry(5000, 5000),
         new THREE.MeshBasicMaterial({
           color: 0x000000,
           opacity: 0.25,
@@ -292,7 +291,10 @@ app.directive('sphere', function($parse, $log, $timeout) {
       sphereGroup.add(sphereRedBack)
 
       // position the first sphere
-      sphereGroup.position.x = -150;
+      sphereGroup.position.x = -1*(startRadius/2);
+
+      // sphereGroup.position.z = 0.1;
+      // sphereGroup.position.y = 0.1;
 
       //need to add a parent value to all the components so it moves all as one.
       sphereBlueFront.userData.parent = sphereGroup;
@@ -300,12 +302,11 @@ app.directive('sphere', function($parse, $log, $timeout) {
       sphereRedFront.userData.parent = sphereGroup;
       sphereRedBack.userData.parent = sphereGroup;
 
-      sphereGroup.name ="sphereGroup"
+      sphereGroup.name ="sphereGroup";
 
-      scene.add(sphereGroup)
+      scene.add(sphereGroup);
 
-      //add the group to the objects array
-      objects.push(sphereGroup)
+      objects.push(sphereGroup);
 
 
       //SECOND Sphere
@@ -316,9 +317,6 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var sphereBlueBack1 = new THREE.Mesh(sphereGeomBlue, blueMaterialBack);
       var sphereRedFront1 = new THREE.Mesh(sphereGeomRed, redMaterialFront);
       var sphereRedBack1 = new THREE.Mesh(sphereGeomRed, redMaterialBack);
-
-
-      sphere1Group.position.x = 0;
 
       //need to add a parent value to all the components so it moves all as one.
       sphereBlueFront1.userData.parent = sphere1Group;
@@ -331,11 +329,13 @@ app.directive('sphere', function($parse, $log, $timeout) {
       sphere1Group.add(sphereRedFront1);
       sphere1Group.add(sphereRedBack1);
 
-      sphere1Group.name = "sphere1Group"
+      sphere1Group.name = "sphere1Group";
+
+      sphere1Group.position.x = (startRadius/2);
 
       scene.add(sphere1Group);
 
-      objects.push(sphere1Group)
+      objects.push(sphere1Group);
 
       ////////////
       // Arrows //
@@ -367,7 +367,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
       geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, -centreY, 0))
 
-      //ARROW for sphere
+      //ARROWS for sphereGroup
 
       //REPULSIVE FORCE
 
@@ -384,7 +384,9 @@ app.directive('sphere', function($parse, $log, $timeout) {
       arrowGroupRep.add(arrowMeshRep);
       arrowGroupRep.add(arrowMeshRep1);
 
-      arrowGroupRep.rotation.x = convertDeg(25);
+      arrowGroupRep.rotation.x = convertDeg(15);
+      arrowGroupRep.rotation.z = convertDeg(180);
+
 
       scene.add(arrowGroupRep);
       sphereGroup.add(arrowGroupRep);
@@ -401,15 +403,14 @@ app.directive('sphere', function($parse, $log, $timeout) {
       arrowGroupAtt.add(arrowMeshAtt);
       arrowGroupAtt.add(arrowMeshAtt1);
 
-      //arrowGroupAtt.rotation.z = convertDeg(180);
-      arrowGroupAtt.rotation.x = convertDeg(-25);
-      //arrowGroupAtt.position.x = -(radiusSphere*4);
+      
+      arrowGroupAtt.rotation.x = convertDeg(-15);     
 
       scene.add(arrowGroupAtt);
 
       sphereGroup.add(arrowGroupAtt);
       
-      //ARROW For Sphere1
+      //ARROW For Sphere1Group
       
       arrow1MeshRep = new THREE.Mesh(geometry, blueMaterialFront);
       arrow1MeshRep1 = new THREE.Mesh(geometry, blueMaterialBack);
@@ -417,14 +418,14 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //group the arrow
       arrow1GroupRep = new THREE.Object3D();
 
-      //assign the arrow to a parent group, not necessary if they are NOT going to be raycasted.
+      //assign the arrow to a parent group, they are part of the group, so need to be assigned a parent
       arrow1MeshRep.userData.parent = sphere1Group;
       arrow1MeshRep1.userData.parent = sphere1Group;
 
       arrow1GroupRep.add(arrow1MeshRep);
       arrow1GroupRep.add(arrow1MeshRep1);
 
-      arrow1GroupRep.rotation.x = convertDeg(25);
+      arrow1GroupRep.rotation.x = convertDeg(15);
 
       scene.add(arrow1GroupRep);
       sphere1Group.add(arrow1GroupRep);
@@ -441,10 +442,10 @@ app.directive('sphere', function($parse, $log, $timeout) {
       arrow1GroupAtt.add(arrow1MeshAtt);
       arrow1GroupAtt.add(arrow1MeshAtt1);
 
-      //arrowGroupAtt.rotation.z = convertDeg(180);
-      arrow1GroupAtt.rotation.x = convertDeg(-25);
-      //arrowGroupAtt.position.x = -(radiusSphere*4);
-
+      
+      arrow1GroupAtt.rotation.x = convertDeg(-15);
+      arrow1GroupAtt.rotation.z = convertDeg(180);
+      
       scene.add(arrow1GroupAtt);
 
       sphere1Group.add(arrow1GroupAtt);
@@ -460,6 +461,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
 
       //Need to set the matrix of the object to its direct center, prevents stretching in the wrong directions. 
+      
       geometryNet.applyMatrix(new THREE.Matrix4().makeTranslation(-0.5 * (arrowMeshRep.geometry.boundingBox.max.x - arrowMeshRep.geometry.boundingBox.min.x), -centreY, 0))
 
       arrowMeshNet = new THREE.Mesh(geometryNet, purpMaterialFront);
@@ -476,6 +478,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //arrowGroupNet.rotation.x = convertDeg(-25);
 
       arrowGroupNet.position.y = radiusSphere * 8;
+      arrowGroupNet.rotation.z = convertDeg(180);
 
       scene.add(arrowGroupNet);
 
@@ -504,7 +507,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //Add box around sphere1Group
       
 
-      var cubeGeometry = new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 );
+      var cubeGeometry = new THREE.BoxGeometry( 100, 100, 100, 1, 1, 1 );
       // using THREE.MeshFaceMaterial() in the constructor below
        //   causes the mesh to use the materials stored in the geometry
        var cubeMaterials = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true, transparent: true } ); 
@@ -514,26 +517,26 @@ app.directive('sphere', function($parse, $log, $timeout) {
        cube.rotation.y = convertDeg(5);
        //scene.add( cube );
       
-
-
       //ADD TEXT
-      
+     
       // create a canvas element
       var canvas1 = document.createElement('canvas');
       var context1 = canvas1.getContext('2d');
-      context1.font = "Regular 14px Tahoma";
+      context1.font = "Bold 14px Tahoma";
       context1.fillStyle = "rgba(0,0,0,0.95)";
-      context1.fillText('Please click on a ball begin!', 0, 10);
+      context1.fillText('Drag a sphere to adjust the system!', 0, 20);
     
       // canvas contents will be used for a texture
       var texture1 = new THREE.Texture(canvas1) 
       texture1.needsUpdate = true;
+      //set this to LinearFilter to prevent warning.
+      texture1.minFilter = THREE.LinearFilter;
             
-      var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+      var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide} );
       material1.transparent = true;
 
       var mesh1 = new THREE.Mesh(
-          new THREE.PlaneGeometry(canvas1.width, canvas1.height),
+          new THREE.PlaneBufferGeometry(canvas1.width, canvas1.height),
           material1
         );
 
@@ -541,7 +544,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         mesh1.position.set(0,-150,0);
         scene.add( mesh1 );
       
-                
+               
       //These are listening for clicks of the mouse on the screen.
       renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
       renderer.domElement.addEventListener('mousedown', onDocumentMouseDown, false);
@@ -568,8 +571,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       event.preventDefault();
 
       // have to use the render.domElement.offset, in order to have the 3D assets anywhere on the page. 
-      mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.width) * 2 - 1;
-      mouse.y = -((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.height) * 2 + 1;
+      mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / width) * 2 - 1;
+      mouse.y = -((event.clientY - renderer.domElement.offsetTop) / height) * 2 + 1;
 
       // raycaster is the way of determining the selection. It is based on the mouse position and the camera angle within
       // the scene.
@@ -578,9 +581,11 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //if an object is selected, do what is inside this if statement
       if (SELECTED) {
 
-        var intersects = raycaster.intersectObject(plane);
-        //Moves the parent object and all its children.
+        container.style.cursor = 'none';
 
+        //Moves the parent object and all its children.
+        var intersects = raycaster.intersectObject(plane);
+        
         //otherSphere will hold the position at the mouse down. 
         var otherSphere = {};
 
@@ -590,18 +595,30 @@ app.directive('sphere', function($parse, $log, $timeout) {
         }
         else otherSphere.x = sphereGroup.position.x;
 
-        //selectedSpherePos is the starting position, from the mouse down event, before the moving occurs.
+        radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
 
-        var maxDistance = Math.abs(selectedSpherePos - otherSphere.x);
-        var currentDistance = Math.abs(selectedSpherePos - intersects[0].point.x);
+        //selectedStartPos is the starting position, from the mouse down event, before the moving occurs.
 
-        if (SELECTED.position.x < (-width/2+radiusSphere*8) || SELECTED.position.x > (width/2-radiusSphere*8)){
+        //maxDistance defines the starting difference between the two spheres.
+        var maxDistance = selectedStartPos - otherSphere.x;
+
+        //measures the current difference between the two spheres
+        var currentDistance = intersects[0].point.x - otherSphere.x;
+
+        //prevents the sphere from being moved out of the canvas. 
+        if (SELECTED.position.x < (-width/2 + (radiusSphere*8))){
+          SELECTED.position.x = (-width/ 2 + (radiusSphere*9))
+          SELECTED = null;
+        }
+        else if (SELECTED.position.x > (width/2 - (radiusSphere*8))) {
+          SELECTED.position.x = (width/2 - (radiusSphere*9));
           SELECTED = null;
         }
 
         //Have to try to dampen the mouse. Will use the starting positions, the starting difference in distance, the current difference
         // in distance and the equilibrium position.
-        else if (selectedSpherePos > otherSphere.x) { 
+        else if (selectedStartPos > otherSphere.x) { 
+
             if (!(SELECTED.position.x < (otherSphere.x + radiusSphere*8))) {
               if (maxDistance > currentDistance) {
                 SELECTED.position.x = intersects[0].point.x;
@@ -615,25 +632,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
         //If the selectedSphere is to the left.
         else {
           if (!(SELECTED.position.x > (otherSphere.x - radiusSphere*8))) {
-
             SELECTED.position.x = intersects[0].point.x;
-
           }
-        }
-
-        //matrix3.getInverse():cant invert matrix - occurs when they are far apart....
-
-        // else if (SELECTED.position.x > (otherSphere.x - radiusSphere*8)){
-        //   SELECTED.position.x = otherSphere.x - radiusSphere*8;
-        // }
-        // else if (SELECTED.position.x < (otherSphere.x + radiusSphere*8)){
-        //   SELECTED.position.x = otherSphere.x + radiusSphere*8;
-        // }
-
-        if (!clicked) {
-        var selectText = scene.getObjectByName("text");
-          scene.remove( selectText );
-          clicked = true;
         }
 
         //need to update the radius while moving the ball around.... 
@@ -643,15 +643,15 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //by setting the second argument to try, you also select the children of whatever is in objects.
       var intersects = raycaster.intersectObjects(objects, true);
 
-      if (intersects.length > 0) {
+      if (intersects.length > 0 && !SELECTED) {
         if (INTERSECTED != intersects[0].object) {
           INTERSECTED = intersects[0].object;
           plane.position.copy(INTERSECTED.position);
           plane.lookAt(camera.position);
         }
-        container.style.cursor = 'pointer';
-      } else {
-        INTERSECTED = null;
+        container.style.cursor = 'pointer';      
+      } else if (!SELECTED){
+        INTERSECTED = null;       
         container.style.cursor = 'auto';
       }
     }
@@ -659,6 +659,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
     function onDocumentMouseDown(event) {
       event.preventDefault();
+
       var intersects = raycaster.intersectObjects(objects, true); //by setting the second argument to try, you also select the children and parent of whatever is in objects.
 
       mouseDown = true;
@@ -671,10 +672,11 @@ app.directive('sphere', function($parse, $log, $timeout) {
         SELECTED = intersects[0].object.userData.parent;
 
         //Set the original position for the sphere. 
-        selectedSpherePos = SELECTED.position.x; 
+        selectedStartPos = SELECTED.position.x; 
 
         var intersects = raycaster.intersectObject(plane);
-        container.style.cursor = 'move';
+        //container.style.cursor = 'move';
+        container.style.cursor = 'none';
 
         if (!clicked) {
           var selectText = scene.getObjectByName("text");
@@ -713,21 +715,19 @@ app.directive('sphere', function($parse, $log, $timeout) {
     }
 
     function render() {
-       //Wrap it in timeout so that is only runs when the current $watch cycles is over. 
-       //assigns the variable to scope.
-       $timeout(function() {
+        //Wrap it in timeout so that is only runs when the current $watch cycles is over. 
+        //assigns the variable to scope variable.
+        $timeout(function() {
         scope.$apply(function() {
-          exp.assign(scope.$parent, sphere1Group.position.x);
+          exp.assign(scope.$parent, radius);
           });
         });
 
-        if (!mouseDown && clicked) {
-<<<<<<< HEAD
-        //if (clicked) {
-=======
+        if (!mouseDown) {
 
->>>>>>> origin/master
-        //if (true) {
+        // Variables 
+        // radius here refers to the internuclear distance
+        radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
         // Two forces, electrostatic_att electrostatic_rep. Have to balance the forces based on   
@@ -739,10 +739,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         //it can be expanded at a later date.
 
         frameRate = 1 / 8;
-
-        // Variables
-        var radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
-
+      
         var dampenCon = -0.08;
 
         //Will use a piece-wise function to graph out the changes. A lot easier than trying to come up with a single golden equation without 
@@ -794,7 +791,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         spherePhys.v += a * frameRate;
 
-        if (sphereGroup.position.x <= (-width/2 + radiusSphere*4) || sphereGroup.position.x >= (width/2 - radiusSphere*4)) {
+        if (sphereGroup.position.x <= (-width/2 + radiusSphere*2) || sphereGroup.position.x >= (width/2 - radiusSphere*2)) {
           spherePhys.v = -spherePhys.v;
         }
 
@@ -822,7 +819,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         sphere1Phys.v += a1 * frameRate;
 
-        if (sphere1Group.position.x <= (-width/2 + radiusSphere*4) || sphere1Group.position.x >= (width/2 - radiusSphere*4)) {
+        if (sphere1Group.position.x <= (-width/2 + radiusSphere*8) || sphere1Group.position.x >= (width/2 - radiusSphere*8)) {
           sphere1Phys.v = -sphere1Phys.v;
         }
 
@@ -841,16 +838,16 @@ app.directive('sphere', function($parse, $log, $timeout) {
           Frep = -Frep;
           Fatt = -Fatt;
         }
-        arrowGroupRep.scale.set( -Frep / arrowScaling,  Frep / arrowScaling, 1);
+        arrowGroupRep.scale.set( Frep / arrowScaling,  Frep / arrowScaling, 1);
         arrowGroupAtt.scale.set( Fatt / arrowScaling,  Fatt / arrowScaling, 1);
 
-        arrowGroupNet.scale.set(Fnet/arrowNetScaling, Fnet/arrowNetScaling, 1)
+        arrowGroupNet.scale.set(-Fnet/arrowNetScaling, -Fnet/arrowNetScaling, 1)
         
         //Arrows for the "SphereGroup1" Because this is switched, one set of arrows is darker then the other
         // maybe try and fix this later
 
         arrow1GroupRep.scale.set( Frep / arrowScaling,  Frep / arrowScaling, 1);
-        arrow1GroupAtt.scale.set( -Fatt / arrowScaling,  Fatt / arrowScaling, 1);
+        arrow1GroupAtt.scale.set( Fatt / arrowScaling,  Fatt / arrowScaling, 1);
 
         arrow1GroupNet.scale.set(Fnet1/arrowNetScaling, Fnet/arrowNetScaling, 1);
 

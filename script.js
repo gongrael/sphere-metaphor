@@ -1,9 +1,10 @@
 // Code goes here
 
-var app = angular.module('ballApp', []);
+var app = angular.module('sphereApp', []);
 
-app.controller('ballController', ['$scope',
+app.controller('sphereController', ['$scope',
   function($scope) {
-    $scope.ballX = {value:0};
+  	var startRadius = 300;
+    $scope.startRadius = {value: startRadius};
   }
 ]);

@@ -4,26 +4,24 @@ app.directive('sphereChart', function($parse, $window, $log) {
     //replace: true,
     //directives need a template, places down the SVG holder for the d3 objects
     //could do it using d3, most likely.
-    template: "<svg width ='400' height='400' class='centred'><g class='forTrace'></g></svg>",
-
-
+    //
+    //
+    template: "<svg class='centred'><g class='forTrace'></g></svg>",
     // link is a function used to modify the DOM, great for updating positions 
     link: function(scope, elem, attrs) {
 
       //defining some variables
-      var padding = 20;
       var xScale, yScale, xAxisGen, yAxisGen;
       var newPoint = false; //this is for controlling when a new ball is drawn. 
       var oldValue = "";
 
-
       //parses all the data found in the attribute ball-data, in this case it will grab the data represeted by ballX. 
       //Parse creates a function of sorts, which can be fed a specific scope? Not 100% sure, need to read more.
-      var exp = $parse(attrs.ballData);
+      var exp = $parse(attrs.sphereDataChart);
 
       //saving the data to a variable, it returns the data, probably done so that you don't have to feed 
       //scope back into the data. not super important
-      var ballDataToPlot = exp(scope);
+      var interNucDistance = exp(scope);
 
       //by using window, you have access to more information, allows you to troubleshoot easier. 
       var d3 = $window.d3;
@@ -34,18 +32,50 @@ app.directive('sphereChart', function($parse, $window, $log) {
       //is a selection for that svg.
       var svg = d3.select(rawSvg[0]);
 
+      var width = 600;
+      var height = 400;
+
+      svg.attr({
+        "width" : width,
+        "height" : height
+      });
+
+      var leftPad = 50;
+      var topPad = 40;
+      var textPad = 10;
+
 
       //variables for Morse Potential
-      var De = 20000;
-      var Beta = 2000;
-      var Req = 200;
-      // var R = ballDataToPlot;
+      //
+      //De will be the energy when the internuclear distance is very large.
+      var De = 200;
 
+      //Beta is not necessary for now, so it will be excluded. 
+      var Beta = 2;
+
+      //This means the max value power to raise e is 10. 
+      var actualEquilRadius = 200;
+     
+      var Req = 3;
+
+      var Bconstant = 20;
+
+      //proper graph shape is the expression below
+      //50*((1-e^(-1*(x-5))))^2 + 100
+      
+      //corrected graph shape.      
+      //De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + 100;
+
+      //corrected so that the equilibrium positions match up.       
+      var correctedRadius = interNucDistance * Req/actualEquilRadius;
+
+    
       //for the trace
       var dataSet = [{
-        x: ballDataToPlot,
-        y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-        //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+        x: interNucDistance,
+        //y: 360 - (interNucDistance) * (interNucDistance) / 4
+        //y: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req)))
+        y: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant)
       }]
 
       //start evaluating the max and min values in the data set
@@ -64,6 +94,7 @@ app.directive('sphereChart', function($parse, $window, $log) {
 
       // This function checks the value of the number, compares it to a global max and min, and resets the global variables minX and maxX.
         function maxOrMin (dataArray) {
+
         var maxX = dataArray[0].x;      
         var minX = dataArray[0].x;
 
@@ -80,14 +111,15 @@ app.directive('sphereChart', function($parse, $window, $log) {
       }   
 
       //$watchCollection for changes in a collection of variables (ie. matrices or objects), if there are any changes 
-      //a newValue is obtained, we then set the newValue of ballDataToPlot. 
+      //a newValue is obtained, we then set the newValue of interNucDistance. 
       // use exp, which is the parsed version of attrs.ballData.
       // redrawBallChart() is called, which changes the position of the ball
       // traceball() is also called, it places a new ball onto the chart. 
       scope.$watch(exp, function(newVal, oldVal) {
         if (newVal != oldVal) {
           oldValue = oldVal;
-          ballDataToPlot = newVal;
+          interNucDistance = newVal;
+          correctedRadius = interNucDistance * Req/actualEquilRadius;
           traceBall()
           redrawBallChart();
           maxAndMin = maxOrMin(dataSet);
@@ -100,24 +132,20 @@ app.directive('sphereChart', function($parse, $window, $log) {
       // the if statements are in place to prevent noise in the graph by rapid movement of the balls
       // also, to stop the writing of new data points once the trace is completed. 
        function traceBall() {
-          if (Math.round(ballDataToPlot) < maxAndMin.min) {
+          if (Math.round(interNucDistance) < maxAndMin.min) {
             newPoint = true;
             dataSet.push({
-                x: ballDataToPlot,
-                y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-
-               //x: ballDataToPlot,
-               //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+               x: interNucDistance,
+               //y: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req)))
+               y: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant)
             });
           }
-          else if (Math.round(ballDataToPlot) > maxAndMin.max) {
+          else if (Math.round(interNucDistance) > maxAndMin.max) {
             newPoint = true;
             dataSet.push({
-              x: ballDataToPlot,
-              y: 360 - (ballDataToPlot) * (ballDataToPlot) / 4
-
-              //x: ballDataToPlot,
-              //y: De*(1 - Math.pow(Math.E, -Beta*(ballDataToPlot -Req)))
+                x: interNucDistance,
+                //y: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req)))
+                y: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant)
             });
           }
           // use the array sort method in conjunction with a simple function, that points the sorter to the object property.
@@ -144,12 +172,13 @@ app.directive('sphereChart', function($parse, $window, $log) {
         // use the domain to specify the lowest and highest value possible
         // use the range to confine this range to certain dimensions. 
         xScale = d3.scale.linear()
-          .domain([-5, 10])
-          .range([0, rawSvg.attr("width")]);
+         // distance between spheres
+          .domain([0, 600])
+          .range([0, (rawSvg.attr("width") -leftPad - textPad)]);
 
         yScale = d3.scale.linear()
-          .domain([0, 50])
-          .range([rawSvg.attr("height"), 0]);
+          .domain([0, 500])
+          .range([ (rawSvg.attr("height") - topPad - textPad), 0]);
 
         xAxisGen = d3.svg.axis()
           .scale(xScale)
@@ -173,19 +202,20 @@ app.directive('sphereChart', function($parse, $window, $log) {
         // the attribute transform allows you to move an entire group at once.
         svg.append("svg:g")
           .attr("class", "x axis")
-          .attr("transform", "translate(50, 360)")
+          .attr("transform", "translate("+ leftPad +", "+ (height-topPad) +")")
+          //.attr("transform", "translate("+ leftPad +", "+ 360 +")")
           .call(xAxisGen);
 
         svg.append("svg:g")
           .attr("class", "y axis")
-          .attr("transform", "translate(50,-40)")
+          .attr("transform", "translate("+ leftPad +", "+ textPad +")")
           .call(yAxisGen);
 
         svg.append("text")
-          .attr("transform", "translate(" + 210 + " ," + 396 + ")")
+          .attr("transform", "translate(" + (width - leftPad)/2 + " ," + (height-textPad) + ")")
           .attr("class", "axislabels")
           .style("text-anchor", "middle")
-          .text("Displacement from Equilibrium (cm)");
+          .text("Distance between spheres(mm)");
 
         svg.append("text")
           .attr("transform", "rotate(-90)")
@@ -200,17 +230,19 @@ app.directive('sphereChart', function($parse, $window, $log) {
         // use class to give it an identifier that allows it to be manipulated easily. 
         svg.append("circle")
           .attr({
-            cx: ballDataToPlot,
-            cy: 360 - (ballDataToPlot) * (ballDataToPlot) / 4,
+            cx: interNucDistance,
+            //cy: 360 - (interNucDistance) * (interNucDistance) / 4,
+            //cy: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req))),
+            cy: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant),
             r: 7,
             "fill": "#4bc4c4",
             "class": "solid",
-            "transform": "translate(183)"
+            "transform": "translate(-10)"
           });
 
         d3.select(".forTrace")
           .append("svg:path")
-          .attr("transform", "translate(183)")
+          .attr("transform", "translate(-10)")
           .attr("d", lineFunc(dataSet))
           .attr("stroke", "grey")
           .attr("stroke-width", 1)
@@ -229,8 +261,10 @@ app.directive('sphereChart', function($parse, $window, $log) {
         
         svg.selectAll(".solid")
           .attr({
-            cx: ballDataToPlot,
-            cy: 360 - (ballDataToPlot) * (ballDataToPlot) / 4,
+            cx: interNucDistance,
+            //cy: 360 - (interNucDistance) * (interNucDistance) / 4,
+            //cy: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req)))
+            cy: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant)
           });
 
           //it appears that when a line is included on the graph, performance goes down, might be another reason.
@@ -239,13 +273,10 @@ app.directive('sphereChart', function($parse, $window, $log) {
         svg.select(".forTrace path")
           .attr("d", lineFunc(dataSet))
          newPoint = false;
-
         }
       }
       
-
       drawBallChart();
-
     }
   };
 });
