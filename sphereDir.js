@@ -25,7 +25,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       //need to define the variable container so that we can match it with the draggable example. 
       var container = document.getElementById("webgl-container");
       //Add the property isDown to mouse, in order to pause the animation
-      mouseDown = false;
+      var mouseDown = false;
+      var clicked = false;
 
       // Variables to make the mouse tracking work.
       var objects = [],
@@ -33,7 +34,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var raycaster = new THREE.Raycaster();
       var mouse = new THREE.Vector2(),
 
-      INTERSECTED, SELECTED;
+      INTERSECTED, SELECTED ,selectedSpherePos;
       var currentMouse;
 
       var width = 900;
@@ -118,7 +119,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
         Fatt4Obj = linearEquation(thirdBreak, ForceAttAtThird, fourthBreak, ForceRepAtFourth);
         
     
-    
+    //define functions for the piece-wise function. this is a constructor of the linear equation variables
+
     function linearEquation(x1, y1, x2, y2) { //might switch arguments to object properties
       //Fill this with y = mx + b
 
@@ -134,6 +136,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       return forceObj;
     }
 
+    //defines a inverse function for the piece-wise function.
     function inverseEquation(x1, y1) {
 
       var forceObj = {}
@@ -297,6 +300,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       sphereRedFront.userData.parent = sphereGroup;
       sphereRedBack.userData.parent = sphereGroup;
 
+      sphereGroup.name ="sphereGroup"
+
       scene.add(sphereGroup)
 
       //add the group to the objects array
@@ -312,6 +317,9 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var sphereRedFront1 = new THREE.Mesh(sphereGeomRed, redMaterialFront);
       var sphereRedBack1 = new THREE.Mesh(sphereGeomRed, redMaterialBack);
 
+
+      sphere1Group.position.x = 0;
+
       //need to add a parent value to all the components so it moves all as one.
       sphereBlueFront1.userData.parent = sphere1Group;
       sphereBlueBack1.userData.parent = sphere1Group;
@@ -322,6 +330,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       sphere1Group.add(sphereBlueBack1);
       sphere1Group.add(sphereRedFront1);
       sphere1Group.add(sphereRedBack1);
+
+      sphere1Group.name = "sphere1Group"
 
       scene.add(sphere1Group);
 
@@ -489,6 +499,48 @@ app.directive('sphere', function($parse, $log, $timeout) {
       scene.add(arrow1GroupNet);
 
       sphere1Group.add(arrow1GroupNet);
+
+
+      //Add box around sphere1Group
+      
+
+      var cubeGeometry = new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 );
+      // using THREE.MeshFaceMaterial() in the constructor below
+       //   causes the mesh to use the materials stored in the geometry
+       var cubeMaterials = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true, transparent: true } ); 
+       cube = new THREE.Mesh( cubeGeometry, cubeMaterials );
+       cube.position.set(0, 0, 0);
+       cube.rotation.x = convertDeg(-5);
+       cube.rotation.y = convertDeg(5);
+       //scene.add( cube );
+      
+
+
+      //ADD TEXT
+      
+      // create a canvas element
+      var canvas1 = document.createElement('canvas');
+      var context1 = canvas1.getContext('2d');
+      context1.font = "Regular 14px Tahoma";
+      context1.fillStyle = "rgba(0,0,0,0.95)";
+      context1.fillText('Please click on a ball begin!', 0, 10);
+    
+      // canvas contents will be used for a texture
+      var texture1 = new THREE.Texture(canvas1) 
+      texture1.needsUpdate = true;
+            
+      var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+      material1.transparent = true;
+
+      var mesh1 = new THREE.Mesh(
+          new THREE.PlaneGeometry(canvas1.width, canvas1.height),
+          material1
+        );
+
+        mesh1.name = "text";
+        mesh1.position.set(0,-150,0);
+        scene.add( mesh1 );
+      
                 
       //These are listening for clicks of the mouse on the screen.
       renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
@@ -525,12 +577,64 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
       //if an object is selected, do what is inside this if statement
       if (SELECTED) {
+
         var intersects = raycaster.intersectObject(plane);
         //Moves the parent object and all its children.
 
-        SELECTED.position.x = intersects[0].point.x;
+        //otherSphere will hold the position at the mouse down. 
+        var otherSphere = {};
 
-        console.log(sphereGroup.position.x); console.log(sphere1Group.position.x);
+        if (SELECTED.name == "sphereGroup") 
+        {
+          otherSphere.x = sphere1Group.position.x;
+        }
+        else otherSphere.x = sphereGroup.position.x;
+
+        //selectedSpherePos is the starting position, from the mouse down event, before the moving occurs.
+
+        var maxDistance = Math.abs(selectedSpherePos - otherSphere.x);
+        var currentDistance = Math.abs(selectedSpherePos - intersects[0].point.x);
+
+        if (SELECTED.position.x < (-width/2+radiusSphere*8) || SELECTED.position.x > (width/2-radiusSphere*8)){
+          SELECTED = null;
+        }
+
+        //Have to try to dampen the mouse. Will use the starting positions, the starting difference in distance, the current difference
+        // in distance and the equilibrium position.
+        else if (selectedSpherePos > otherSphere.x) { 
+            if (!(SELECTED.position.x < (otherSphere.x + radiusSphere*8))) {
+              if (maxDistance > currentDistance) {
+                SELECTED.position.x = intersects[0].point.x;
+              }
+              else {
+                SELECTED.position.x = intersects[0].point.x;
+              }
+           }
+         }
+
+        //If the selectedSphere is to the left.
+        else {
+          if (!(SELECTED.position.x > (otherSphere.x - radiusSphere*8))) {
+
+            SELECTED.position.x = intersects[0].point.x;
+
+          }
+        }
+
+        //matrix3.getInverse():cant invert matrix - occurs when they are far apart....
+
+        // else if (SELECTED.position.x > (otherSphere.x - radiusSphere*8)){
+        //   SELECTED.position.x = otherSphere.x - radiusSphere*8;
+        // }
+        // else if (SELECTED.position.x < (otherSphere.x + radiusSphere*8)){
+        //   SELECTED.position.x = otherSphere.x + radiusSphere*8;
+        // }
+
+        if (!clicked) {
+        var selectText = scene.getObjectByName("text");
+          scene.remove( selectText );
+          clicked = true;
+        }
 
         //need to update the radius while moving the ball around.... 
         //radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);     
@@ -566,8 +670,17 @@ app.directive('sphere', function($parse, $log, $timeout) {
         //Define the selected as the parent.
         SELECTED = intersects[0].object.userData.parent;
 
+        //Set the original position for the sphere. 
+        selectedSpherePos = SELECTED.position.x; 
+
         var intersects = raycaster.intersectObject(plane);
         container.style.cursor = 'move';
+
+        if (!clicked) {
+          var selectText = scene.getObjectByName("text");
+          scene.remove( selectText );
+          clicked = true;
+        }
 
         //we set velocities to zero when object is moved, this prevents initial movement in the incorrect direction.
         spherePhys.v = 0;
@@ -581,7 +694,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
     function onDocumentMouseUp(event) {
       event.preventDefault();
-
+      SELECTED = null;
       window.removeEventListener('mouseup', onDocumentMouseUp, false);
       window.addEventListener('mousedown', onDocumentMouseDown, false);
 
@@ -590,7 +703,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       if (INTERSECTED) {
         plane.position.copy(INTERSECTED.position);
       }
-      SELECTED = null;
+      
       container.style.cursor = 'auto';
     }
 
@@ -608,8 +721,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
           });
         });
 
-        if (!mouseDown) {
-
+        if (!mouseDown && clicked) {
+        //if (clicked) {
         //if (true) {
 
         // Physics part of this code is taken from the physics tutorial http://burakkanber.com/blog/physics-in-javascript-car-suspension-part-1-spring-mass-damper/
@@ -621,7 +734,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         //also for now, the forces experienced by both balls are equivalent, and mass/charge quantities cannot be changes.
         //it can be expanded at a later date.
 
-        frameRate = 1 / 5;
+        frameRate = 1 / 8;
 
         // Variables
         var radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);
@@ -653,7 +766,6 @@ app.directive('sphere', function($parse, $log, $timeout) {
           Frep = ForceRepAtFourth;
           Fatt = ForceAttAtFourth;
         }
-
   
         //sphereGroup phyiscs below
 
@@ -678,7 +790,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         spherePhys.v += a * frameRate;
 
-        if (sphereGroup.position.x <= -width/2 || sphereGroup.position.x >= width/2) {
+        if (sphereGroup.position.x <= (-width/2 + radiusSphere*4) || sphereGroup.position.x >= (width/2 - radiusSphere*4)) {
           spherePhys.v = -spherePhys.v;
         }
 
@@ -706,7 +818,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         sphere1Phys.v += a1 * frameRate;
 
-        if (sphere1Group.position.x <= -width/2 || sphere1Group.position.x >= width/2) {
+        if (sphere1Group.position.x <= (-width/2 + radiusSphere*4) || sphere1Group.position.x >= (width/2 - radiusSphere*4)) {
           sphere1Phys.v = -sphere1Phys.v;
         }
 
