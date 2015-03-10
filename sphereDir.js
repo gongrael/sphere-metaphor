@@ -31,7 +31,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       INTERSECTED, SELECTED, selectedStartPos;
       var currentMouse;
 
-      var width = 900;
+      var width = 800;
       var height = 300;
       var startRadius = 300;
 
@@ -235,8 +235,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
       });
 
       var sphereGeomBlue = new THREE.SphereGeometry(radiusSphere, 32, 16);
-      sphereBlueFront = new THREE.Mesh(sphereGeomBlue, blueMaterialFront);
 
+      sphereBlueFront = new THREE.Mesh(sphereGeomBlue, blueMaterialFront);
       sphereBlueBack = new THREE.Mesh(sphereGeomBlue, blueMaterialBack);
 
       //Red sphere
@@ -614,28 +614,30 @@ app.directive('sphere', function($parse, $log, $timeout) {
           SELECTED.position.x = (width/2 - (radiusSphere*9));
           SELECTED = null;
         }
-
         //Have to try to dampen the mouse. Will use the starting positions, the starting difference in distance, the current difference
         // in distance and the equilibrium position.
         else if (selectedStartPos > otherSphere.x) { 
-
-            if (!(SELECTED.position.x < (otherSphere.x + radiusSphere*8))) {
-              if (maxDistance > currentDistance) {
+            if (!(SELECTED.position.x <= (otherSphere.x + radiusSphere*9))) {
                 SELECTED.position.x = intersects[0].point.x;
-              }
-              else {
-                SELECTED.position.x = intersects[0].point.x;
-              }
            }
+           else {
+             SELECTED.position.x = otherSphere.x + radiusSphere*12;
+             SELECTED = null;
+           }
+
          }
 
         //If the selectedSphere is to the left.
         else {
-          if (!(SELECTED.position.x > (otherSphere.x - radiusSphere*8))) {
+          if (!(SELECTED.position.x > (otherSphere.x - radiusSphere*9))) {
             SELECTED.position.x = intersects[0].point.x;
           }
-        }
+          else {
+            SELECTED.position.x = otherSphere.x - radiusSphere*12;
+            SELECTED = null;
+          }
 
+        }
         //need to update the radius while moving the ball around.... 
         //radius = Math.abs(sphereGroup.position.x - sphere1Group.position.x);     
       }
