@@ -42,7 +42,8 @@ app.directive('sphereChart', function($parse, $window, $log) {
 
       var leftPad = 50;
       var topPad = 40;
-      var textPad = 10;
+      var textPad = 15;
+      var yPad = 10;
 
 
       //variables for Morse Potential
@@ -178,7 +179,7 @@ app.directive('sphereChart', function($parse, $window, $log) {
 
         yScale = d3.scale.linear()
           .domain([0, 500])
-          .range([ (rawSvg.attr("height") - topPad - textPad), 0]);
+          .range([ (rawSvg.attr("height") - topPad - textPad -yPad), 0]);
 
         xAxisGen = d3.svg.axis()
           .scale(xScale)
@@ -202,13 +203,13 @@ app.directive('sphereChart', function($parse, $window, $log) {
         // the attribute transform allows you to move an entire group at once.
         svg.append("svg:g")
           .attr("class", "x axis")
-          .attr("transform", "translate("+ leftPad +", "+ (height-topPad) +")")
+          .attr("transform", "translate("+ leftPad +", "+ (height-topPad-textPad) +")")
           //.attr("transform", "translate("+ leftPad +", "+ 360 +")")
           .call(xAxisGen);
 
         svg.append("svg:g")
           .attr("class", "y axis")
-          .attr("transform", "translate("+ leftPad +", "+ textPad +")")
+          .attr("transform", "translate("+ leftPad +", "+ yPad +")")
           .call(yAxisGen);
 
         svg.append("text")
@@ -234,8 +235,8 @@ app.directive('sphereChart', function($parse, $window, $log) {
             //cy: 360 - (interNucDistance) * (interNucDistance) / 4,
             //cy: De*(1 - Math.pow(Math.E, -Beta*(interNucDistance -Req))),
             cy: (height-topPad) - (De*(Math.pow((1- Math.pow(Math.E, -1*(correctedRadius-Req))), 2)) + Bconstant),
-            r: 7,
-            "fill": "#4bc4c4",
+            r: 3,
+            "fill": "#dd4545",
             "class": "solid",
             "transform": "translate(-10)"
           });

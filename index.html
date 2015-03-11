@@ -4,38 +4,81 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   
+    <!-- Libraries -->
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 
-<!-- 
-
+    <!-- 
+    Local development (no internet)
     <script src="d3.min.js"></script>
     <script src="three.min.js"></script>
     <script src="angular.min.js"></script>
 
- -->
+     -->
 
+    <!-- Style Sheets -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css" />
+
+
+    <!-- Program Scripts -->  
     <script src="script.js"></script>
     <script src="sphereChartDir.js"></script>
     <script src="sphereDir.js"></script>
     
 
-    </head>
+ </head>
 
   <body>
-   
-    <div ng-app="sphereApp" ng-controller="sphereController">
+
+    <div ng-app="sphereApp" ng-controller="sphereController">    
     
-    
-    <h3 class="centred head3"> Simple oscillator: Electrostatic Spheres </h3>
-    
-     <sphere-chart sphere-data-chart="startRadius.value"></sphere-chart>
-     
-     <sphere sphere-data="startRadius.value"></sphere>
-    
+
+      <div class="row">
+        <h1 class="col-lg-12 red"> CHM311 Study: Chemveristy Testing</h1>
+      </div>
+
+        <div class "row"> 
+
+          <div class = "col-md-3 side-bar"> 
+            <div class="grey"> 
+              <p class="red"> <strong> Welcome! </strong></p>
+              <p>  Thank you for continuing with our study. The interactive component in the middle of the page explores an analogy for introducing simple harmonic motion. Simply by observing the system, we can start to make inferences about simple harmonic motion. The graph will also give us additional information about the system, including details on its energy and distances. </p>
+              <p> Simple harmonic motion is useful for understanding concepts in quantum chemistry. When two atoms interact within a bond, they will oscillate in a similar, yet, non-identical fashion. Also, the energy of the diatomic system will change as the inter-nuclear separation changes.</p> 
+              <p> Please read the description the right of the page for more information. When you are done with the model, please click logout on the bottom right of this page and proceed with the post-test.</p> 
+            </div>
+          </div>
+
+        <div class = "col-md-6">  
+          <div class "row"> 
+            <h4 class="col-lg-12 centred head3"> Simple oscillator: Electrostatic Spheres </h4>
+          </div>
+          <div class "row"> 
+            <sphere-chart sphere-data-chart="startRadius.value" class="col-lg-12"></sphere-chart>
+          </div>
+          <div class "row"> 
+            <sphere sphere-data="startRadius.value" class="col-lg-12"></sphere>
+          </div>
+        </div>
+
+
+        <div class = "col-md-3 side-bar"> 
+            <div class="grey"> 
+              <p class="red"> <strong> Simple Harmonic Oscillator </strong> </p>
+              <p> In this example of a simple harmonic oscillator, we have two spheres which exert both a repulsive and attractive force on each other. In this proposed system, repulsive forces (blue arrows) are stronger than attractive forces (red arrows) when the spheres are close to each other. The net force (purple arrows), shows the summation of the two forces, and how this changes with the distance between the spheres. In this system, there exists an equilibrium distance where the net force is equal to zero. When the system is disturbed, it will oscillate around this equilibrium position, with changes to the systems energy obsevered. What happens to the motion over time? Why?</p>
+              <p> Try pushing the spheres together or pulling the spheres apart. Observe the relationship between the two spheres and changes to potential energy. What else do you notice? Try moving the spheres as far away from each other as possible. What happens? </p>  
+            </div>
+        </div>
      </div>
+    
+    </div>
+
+    <div class="row">
+      <div class="col-md-3 right-align " ><a class="red" href=".">Logout</a></div>
+    </div>
+
   </body>
 
 </html>

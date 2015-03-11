@@ -32,7 +32,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
       var currentMouse;
 
       var width = 800;
-      var height = 300;
+      var height = 200;
       var startRadius = 300;
 
  
@@ -517,13 +517,14 @@ app.directive('sphere', function($parse, $log, $timeout) {
        cube.rotation.y = convertDeg(5);
        //scene.add( cube );
       
-      //ADD TEXT
-     
+      ///////////
+      //  TEXT //
+      ///////////
       // create a canvas element
       var canvas1 = document.createElement('canvas');
       var context1 = canvas1.getContext('2d');
-      context1.font = "Bold 14px Tahoma";
-      context1.fillStyle = "rgba(0,0,0,0.95)";
+      context1.font = "14px Tahoma";
+      context1.fillStyle = "rgba(0,0,0,0.65)";
       context1.fillText('Drag a sphere to adjust the system!', 0, 20);
     
       // canvas contents will be used for a texture
@@ -553,16 +554,27 @@ app.directive('sphere', function($parse, $log, $timeout) {
     }
 
 
+    //this functions figures out the total offset of the element you are searching
+      //it goes up the the parent chain, to determine the absolute position
+      function findPos(obj) {
+        var curleft = curtop = 0;
+        if (obj.offsetParent) {
+          do {
+              curleft += obj.offsetLeft;
+              curtop += obj.offsetTop;
+              } 
+          while (obj = obj.offsetParent);
+          return [curleft,curtop];
+        }
+      }
+
+
+
+    //quick function for converting degrees into radians.
     function convertDeg(deg) {
       var degToRad = (Math.PI / 180) * deg;
       return degToRad;
     }
-
-
-     //quick function for converting degrees into radians.
-    function convert(degree) {
-      return degree * (Math.PI / 180);
-    };
 
 
      //The below functions are for the movement of the balls. Have to adjust the mouse x and y to 
@@ -570,9 +582,11 @@ app.directive('sphere', function($parse, $log, $timeout) {
     function onDocumentMouseMove(event) {
       event.preventDefault();
 
+      var offsetArr = findPos(renderer.domElement);
+
       // have to use the render.domElement.offset, in order to have the 3D assets anywhere on the page. 
-      mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / width) * 2 - 1;
-      mouse.y = -((event.clientY - renderer.domElement.offsetTop) / height) * 2 + 1;
+       mouse.x = ((event.clientX - offsetArr[0]) / renderer.domElement.width) * 2 - 1;
+        mouse.y = -((event.clientY - offsetArr[1]) / renderer.domElement.height) * 2 + 1;
 
       // raycaster is the way of determining the selection. It is based on the mouse position and the camera angle within
       // the scene.
@@ -677,8 +691,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
         selectedStartPos = SELECTED.position.x; 
 
         var intersects = raycaster.intersectObject(plane);
-        //container.style.cursor = 'move';
-        container.style.cursor = 'none';
+        container.style.cursor = 'move';
+        //container.style.cursor = 'none';
 
         if (!clicked) {
           var selectText = scene.getObjectByName("text");
@@ -742,7 +756,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         frameRate = 1 / 8;
       
-        var dampenCon = -0.08;
+        var dampenCon = -0.04;
 
         //Will use a piece-wise function to graph out the changes. A lot easier than trying to come up with a single golden equation without 
         //graphing 
@@ -782,7 +796,8 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
         //dampening force, Fdampen is negative cause of dampenCon
         if (Math.abs(spherePhys.v) < 3) {
-          var Fdampen = 0;
+          var dampenCon = -0.001;
+          var Fdampen = dampenCon * spherePhys.v;
         } else {
           var Fdampen = dampenCon * spherePhys.v;
         }
