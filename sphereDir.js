@@ -226,6 +226,7 @@ app.directive('sphere', function($parse, $log, $timeout) {
         opacity: 0.95,
         side: THREE.FrontSide
       });
+
       var blueMaterialBack = new THREE.MeshPhongMaterial({
         color: 0x0000ff,
         ambient: 0x0000ff,
@@ -313,10 +314,10 @@ app.directive('sphere', function($parse, $log, $timeout) {
 
       sphere1Group = new THREE.Object3D();
 
-      var sphereBlueFront1 = new THREE.Mesh(sphereGeomBlue, blueMaterialFront);
-      var sphereBlueBack1 = new THREE.Mesh(sphereGeomBlue, blueMaterialBack);
-      var sphereRedFront1 = new THREE.Mesh(sphereGeomRed, redMaterialFront);
-      var sphereRedBack1 = new THREE.Mesh(sphereGeomRed, redMaterialBack);
+      sphereBlueFront1 = new THREE.Mesh(sphereGeomBlue, blueMaterialFront);
+      sphereBlueBack1 = new THREE.Mesh(sphereGeomBlue, blueMaterialBack);
+      sphereRedFront1 = new THREE.Mesh(sphereGeomRed, redMaterialFront);
+      sphereRedBack1 = new THREE.Mesh(sphereGeomRed, redMaterialBack);
 
       //need to add a parent value to all the components so it moves all as one.
       sphereBlueFront1.userData.parent = sphere1Group;
